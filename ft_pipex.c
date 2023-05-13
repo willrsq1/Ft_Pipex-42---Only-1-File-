@@ -6,7 +6,7 @@
 /*   By: wruet-su <william.ruetsuquet@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/12 21:18:23 by wruet-su          #+#    #+#             */
-/*   Updated: 2023/05/13 14:28:28 by wruet-su         ###   ########.fr       */
+/*   Updated: 2023/05/13 14:38:57 by wruet-su         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,13 +67,13 @@ inline int	ft_child(char **argv, int mode, int *p, char **envp)
 	{
 		f = open(argv[1], O_RDONLY);
 		if (f == -1 || ((dup2(f, 0) == -1 || dup2(p[1], 1) == -1) && !close(f)))
-			return (close(p[1]), perror("CHILD 1"), exit(1), 1);
+			return (close(p[1]), perror(argv[1]), exit(1), 1);
 	}
 	if (mode == SECOND_CHILD)
 	{
 		f = open(argv[4], O_CREAT | O_WRONLY | O_TRUNC, 000644);
 		if (f == -1 || ((dup2(p[0], 0) == -1 || dup2(f, 1) == -1) && !close(f)))
-			return (close(p[0]), perror("CHILD 2"), exit(1), 1);
+			return (close(p[0]), perror(argv[4]), exit(1), 1);
 	}
 	tab = ft_split(argv[2 + mode], ' ', -1, 0);
 	cmd = ft_get_command(ft_strcat("/", tab[0], 0, 0), envp, 0, -1);
@@ -82,7 +82,7 @@ inline int	ft_child(char **argv, int mode, int *p, char **envp)
 	f = -1;
 	while (tab && tab[++f])
 		free(tab[f]);
-	return (free(tab), exit(1), 1);
+	return (close(f), close(p[(mode + 1) % 2]), free(tab), exit(1), 1);
 }
 
 static char	*ft_get_command(char *token, char **envp, int i, int y)
