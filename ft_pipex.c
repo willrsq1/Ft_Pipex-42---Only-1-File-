@@ -6,7 +6,7 @@
 /*   By: wruet-su <william.ruetsuquet@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/12 21:18:23 by wruet-su          #+#    #+#             */
-/*   Updated: 2023/05/13 01:30:15 by wruet-su         ###   ########.fr       */
+/*   Updated: 2023/05/13 14:28:28 by wruet-su         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,32 +56,32 @@ int	main(int argc, char **argv, char **envp)
 	return (0);
 }
 
-static int	ft_child(char **argv, int mode, int *pipes, char **envp)
+inline int	ft_child(char **argv, int mode, int *p, char **envp)
 {
 	char	**tab;
-	int		fd;
+	int		f;
 	char	*cmd;
 
-	close(pipes[mode]);
+	close(p[mode]);
 	if (mode == FIRST_CHILD)
 	{
-		fd = open(argv[1], O_RDONLY);
-		if (fd == -1 || dup2(fd, 0) == -1 || dup2(pipes[1], 1) == -1)
-			return (perror(argv[1]), exit(1), 1);
+		f = open(argv[1], O_RDONLY);
+		if (f == -1 || ((dup2(f, 0) == -1 || dup2(p[1], 1) == -1) && !close(f)))
+			return (close(p[1]), perror("CHILD 1"), exit(1), 1);
 	}
 	if (mode == SECOND_CHILD)
 	{
-		fd = open(argv[4], O_CREAT | O_WRONLY | O_TRUNC, 000644);
-		if (fd == -1 || dup2(pipes[0], 0) == -1 || dup2(fd, 1) == -1)
-			return (perror(argv[4]), exit(1), 1);
+		f = open(argv[4], O_CREAT | O_WRONLY | O_TRUNC, 000644);
+		if (f == -1 || ((dup2(p[0], 0) == -1 || dup2(f, 1) == -1) && !close(f)))
+			return (close(p[0]), perror("CHILD 2"), exit(1), 1);
 	}
 	tab = ft_split(argv[2 + mode], ' ', -1, 0);
 	cmd = ft_get_command(ft_strcat("/", tab[0], 0, 0), envp, 0, -1);
 	if (cmd && execve(cmd, tab, envp) == -1)
 		perror(cmd);
-	fd = -1;
-	while (tab && tab[++fd])
-		free(tab[fd]);
+	f = -1;
+	while (tab && tab[++f])
+		free(tab[f]);
 	return (free(tab), exit(1), 1);
 }
 
@@ -124,7 +124,7 @@ static char	**ft_split(char *token, char c, int i, int y)
 		;
 	tab = malloc(sizeof(char *) * (i + 1));
 	if (!tab)
-		return (perror("Malloc failed"), NULL);
+		return (perror("Malloc failed"), exit(1), NULL);
 	line = -1;
 	while (++line > -1 && *token)
 	{
@@ -133,7 +133,7 @@ static char	**ft_split(char *token, char c, int i, int y)
 			token++;
 		tab[line] = malloc(sizeof(char) * (i + 1));
 		if (!*token || (!tab[line] && write(2, "Malloc failed !\n", 17)))
-			return (tab[line] = NULL, tab);
+			return (free(tab[line]), tab[line] = NULL, tab);
 		while (*token && *token != c)
 			tab[line][++y] = *token++;
 		tab[line][++y] = '\0';
@@ -150,9 +150,9 @@ static char	*ft_strcat(char *s1, char *s2, int len1, int len2)
 	if (!s2 || !s1)
 	{
 		str = malloc(sizeof(char) * 2);
-		str[0] = ' ';
-		str[1] = '\0';
-		return (str);
+		if (!str)
+			return (perror("Strcat"), exit(1), NULL);
+		return (str[0] = ' ', str[1] = '\0', str);
 	}
 	while (s1[len1])
 		len1++;
