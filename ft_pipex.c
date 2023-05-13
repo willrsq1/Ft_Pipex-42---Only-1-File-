@@ -6,7 +6,7 @@
 /*   By: wruet-su <william.ruetsuquet@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/12 21:18:23 by wruet-su          #+#    #+#             */
-/*   Updated: 2023/05/13 14:38:57 by wruet-su         ###   ########.fr       */
+/*   Updated: 2023/05/13 14:42:03 by wruet-su         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ inline int	ft_child(char **argv, int mode, int *p, char **envp)
 		if (f == -1 || ((dup2(p[0], 0) == -1 || dup2(f, 1) == -1) && !close(f)))
 			return (close(p[0]), perror(argv[4]), exit(1), 1);
 	}
-	tab = ft_split(argv[2 + mode], ' ', -1, 0);
+	tab = ft_split(argv[2 + mode], ' ', -1, f);
 	cmd = ft_get_command(ft_strcat("/", tab[0], 0, 0), envp, 0, -1);
 	if (cmd && execve(cmd, tab, envp) == -1)
 		perror(cmd);
@@ -124,7 +124,7 @@ static char	**ft_split(char *token, char c, int i, int y)
 		;
 	tab = malloc(sizeof(char *) * (i + 1));
 	if (!tab)
-		return (perror("Malloc failed"), exit(1), NULL);
+		return (perror("Malloc failed"), close(y), exit(1), NULL);
 	line = -1;
 	while (++line > -1 && *token)
 	{
